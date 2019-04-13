@@ -3,7 +3,7 @@
     (Working, but not up-to-date, as in not using latest functionalities.)
 """
 
-from entities import Genome
+from grom import Genome
 Genome.DEBUG = False
 
 e = Genome("examples/src/kdl.gb", "examples/test.gb")

@@ -1,4 +1,4 @@
-from entities import Genome
+from grom import Genome
 
 e = Genome("examples/src/kdl.gb", "test.gb")
 e.partition([
