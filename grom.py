@@ -24,41 +24,15 @@ class Genome:
             file it indicate (file is open in `'rb'`). Otherwise, use `read`
             from the object.
 
-            Data are stored in a `bytearray` object using `'ascii'` encoding.
-
-            `name` allows you to give a name to the `Genome` this name will be
-            used to `save` and `start` the file. If no name is given, it will
-            take the name of the given file. This behaviour may end up
-            overwriting the source file when trying to `save`.
-
             If the `rand` is not given, this `Genome` will generate its own.
 
-            By default, all the data are bound to a single partition 0 of name
-            "default" and of range 0 to `size` - 1.
-
-            If `isData` is set to `True`, it toggle to a data mode where `file`
-            is assumed to contains an array of data (`bytes`, `int[]`, `str`,
-            or `bytearray`) that can be converted to a `bytearray`. Therefore,
-            if `file` is a `str`, it use the `'ascii'` encoding.
+            Data are stored in a `bytearray` object using `'ascii'` encoding.
+            For more information about data loading see `Genome.load`.
         """
-        Genome.output("Data loading..  [", end="")
-        if not isData:
-            if isinstance(file, str):
-                file = open(file, 'rb')
+        self.name = name or "noname"
 
-            self.data = bytearray(file.read())
-            self.name = name or file.name
-            file.close() # USL ?
-        else:
-            if isinstance(file, str):
-                self.data = bytearray(file, 'ascii')
-            else:
-                self.data = bytearray(file)
-            self.name = name or file[:8]
-
-        self.size = len(self.data)
-        self.part = [("default", range(self.size))]
-        self.pmap = { "default": 0 }
+        Genome.output("Loading Data..  [", end="")
+        self.load(file, name, isData)
         Genome.output("=" * (Genome.LINE_SIZE - 19) + "=]")
 
         if not isinstance(rand, Random):
@@ -90,7 +64,13 @@ class Genome:
             if n < 0:
                 pushed+= n
 
-            names+= "\n{}: {} ({:,}b)".format(k, self[k][0], len(self[k][1]))
+            names+= "\n{}: {} ({:,}b | from Ox{:X} to 0x{:X})".format(
+                    k,
+                    self[k][0],
+                    len(self[k][1]),
+                    self[k][1][0],
+                    self[k][1][-1]
+                )
             parts+= str(k) + "-" * n + "|"
 
             newProgress = int(k / len(self) * (Genome.LINE_SIZE - 19))
@@ -109,7 +89,7 @@ class Genome:
             Bind a partition system to the data as described by `part`. It
             should be an array of `(str, range)` tuples.
 
-            If the last tuple dose not implement a `range` (i.e. is only made
+            If the last tuple does not implement a `range` (i.e. is only made
             of a name), it will be assigned what is left of the data.
 
             Note: This function does not check for overlaps nor unmapped areas.
@@ -229,9 +209,10 @@ class Genome:
 
         if not bounds:
             bounds = [range(self.size)]
-        for k in range(len(bounds)):
-            if isinstance(bounds[k], (int, str)):
-                bounds[k] = self[bounds[k]][1]
+        else:
+            for k in range(len(bounds)):
+                if isinstance(bounds[k], (int, str)):
+                    bounds[k] = self[bounds[k]][1]
 
         progress = 0
         total = int(ratio * self.size)
@@ -267,9 +248,10 @@ class Genome:
         """
         if not bounds:
             bounds = [range(self.size)]
-        for k in range(len(bounds)):
-            if isinstance(bounds[k], (int, str)):
-                bounds[k] = self[bounds[k]][1]
+        else:
+            for k in range(len(bounds)):
+                if isinstance(bounds[k], (int, str)):
+                    bounds[k] = self[bounds[k]][1]
 
         progress = 0
 
@@ -293,9 +275,125 @@ class Genome:
         Genome.output("=" * (Genome.LINE_SIZE - 18 - progress) + "]")
 
         return self
+
+    def crossover(self, mate, name=None, rand=None, bounds=[], crosser=None):
+        """ Create a crossover `Genome` from parents.
+
+            `self` and `mate` are crossed over into a new `Genome`. This
+            algorithm is not yet finished, and only for testing and
+            placeholding purposes. `amount` is the number of times the
+            algorithm will be executed.
+
+            For each given bound, determines (randomly) which chunk of data
+            (from eight parent) will go into the new `Genome`. The `bounds`
+            parameters should be a full and flawless (no holes, no overlaps)
+            partition for the data. Both parent should have the same size.
+            Note that none of this is checked here as of right now.
+
+            If the `crosser` function is not `None`, it is called with for
+            parameters the two chunks of data to swap as `bytearray`s (`self`
+            first, then `mate`), and expected an output of data the same size,
+            formatted as on of: `int[]` `bytes` `str` (supposedly 'ascii'
+            encoded) or `bytearray`. The new `Genome`'s data is initialized at
+            `'b0x00'`, therefore if `crosser` does not return an appropriated
+            result, the part will be kept at zeros.
+
+            If not name is given, the name will be "`self.name`x`mate.name`".
+
+            If the `rand` is not given, the new `Genome` will generate its own.
+
+            If `bounds` is left empty, it will be loaded from the partition
+            system of this `Genome` (`self`). To restrict mutations to an area,
+            you must precise an iterable of ranges (iterables) from which the
+            destination will be chosen. If `bound` contains raw integers or raw
+            string, they are interpreted as partition identifiers and thus
+            replace by their partition's range. Note that `mate`'s partition is
+            never taken into account.
+
+            Lastly, only `self`'s random is used.
+        """
+        if not bounds:
+            bounds = [r for n, r in self.part]
+        else:
+            for k in range(len(bounds)):
+                if isinstance(bounds[k], (int, str)):
+                    bounds[k] = self[bounds[k]][1]
+
+        data = bytearray([0] * self.size)
+
+        progress = 0
+
+        Genome.output("Crossing over.. [", end="")
+        for k in range(len(bounds)):
+            start, end = bounds[k][0], bounds[k][-1]
+
+            if callable(crosser):
+                r = crosser(self.data[start:end], mate.data[start:end])
+
+                if isinstance(r, str):
+                    r = bytearray(r, 'ascii')
+                if isinstance(r, (bytes, list, tuple)):
+                    r = bytearray(r)
+            else:
+                r = Genome.randit((self.data, mate.data), self.rand)[start:end]
+
+            data[start:end] = r
+
+            newProgress = int(k / len(bounds) * (Genome.LINE_SIZE - 19))
+            if progress < newProgress:
+                Genome.output("=" * (newProgress - progress), end="")
+                progress = newProgress
+        Genome.output("=" * (Genome.LINE_SIZE - 18 - progress) + "]")
+
+        return Genome(data, name or self.name + "x" + mate.name, rand, True)
     # END data modification
 
     # START file management
+    def load(self, file=None, name=None, isData=False):
+        """ Load the `Genome` from a file.
+
+            `name` allows you to give a name to the `Genome` this name will be
+            used to `save` and `start` the file. If no name is given, it will
+            take the name of the given file. This behaviour may end up
+            overwriting the source file when trying to `save`. If the `isData`
+            if `True` and no name is given, the `Genome` will take for name the
+            first 8 (or less if not enough) bytes of raw data.
+
+            By default, all the data are bound to a single partition 0 of name
+            "default" and of range 0 to `size` - 1.
+
+            If `isData` is set to `True`, it toggle to a data mode where `file`
+            is assumed to contains an array of data (`bytes`, `int[]`, `str`,
+            or `bytearray`) that can be converted to a `bytearray`. Therefore,
+            if `file` is a `str`, it use the `'ascii'` encoding.
+
+            Finally, if `file` if `None`, try to load `self.name` as a file.
+        """
+        if name:
+            self.name = name
+
+        if not file:
+            file = self.name
+            isData = False
+
+        if not isData:
+            if isinstance(file, str):
+                file = open(file, 'rb')
+
+            self.data = bytearray(file.read())
+            self.name = name or file.name
+            file.close() # USL ?
+        else:
+            if isinstance(file, str):
+                self.data = bytearray(file, 'ascii')
+            else:
+                self.data = bytearray(file)
+            self.name = name or file[:8]
+
+        self.size = len(self.data)
+        self.part = [("default", range(self.size))]
+        self.pmap = { "default": 0 }
+
     def save(self, file=None):
         """ Save the `Genome` into a file.
 
@@ -314,14 +412,25 @@ class Genome:
         return self
 
     def start(self):
-        """ Launch it.
+        """ 'Launch' the `Genome`.
 
-            Start the `Genome`'s file using Windows' associated program. You
-            may want to `save` the `Genome` beforehand as this effectively runs
-            `start %name%` through the CMD.
+            Start the `Genome`'s file with OS' associated program (using
+            python's `os.startfile`). You may want to `save` the `Genome`
+            beforehand.
         """
         import os
         os.startfile(self.name)
 
         return self
+
+    def __call__(self, file=None):
+        """ Save then start.
+
+            See both `Genome.save` and `Genome.start` functions' documentation
+            for more detailed information.
+
+            If a `file` is given, save into this file. The `name` of the
+            `Genome` is not modified.
+        """
+        return self.save(file).start()
     # END file management
