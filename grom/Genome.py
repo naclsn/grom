@@ -1,4 +1,4 @@
-from random import Random
+import grom
 
 class Genome:
     """ A `Genome` is a `bytearray`, often loaded from file, on which you can
@@ -13,9 +13,6 @@ class Genome:
             e.start()        # start the file in an associated emulator
         ```
     """
-    DEBUG = __debug__ or True # overwitted for... debugging purposes ?
-    LINE_SIZE = 80 # used to determine the max size of a printed line
-
     # START object general
     def __init__(self, file, name=None, rand=None, isData=False):
         """ Create a new `Genome` instance from file.
@@ -24,20 +21,22 @@ class Genome:
             file it indicate (file is open in `'rb'`). Otherwise, use `read`
             from the object.
 
-            If the `rand` is not given, this `Genome` will generate its own.
+            If the `rand` is not given, this `Genome` will generate its own
+            (from `grom.util.random` which should be the same as default
+            Python's `random`).
 
             Data are stored in a `bytearray` object using `'ascii'` encoding.
             For more information about data loading see `Genome.load`.
         """
         self.name = name or "noname"
 
-        Genome.output("Loading Data..  [", end="")
+        pr = grom.util.Progress("Loading data")
         self.load(file, name, isData)
-        Genome.output("=" * (Genome.LINE_SIZE - 19) + "=]")
+        del pr
 
-        if not isinstance(rand, Random):
-            rand = Random(rand)
-        self.rand = rand or Random()
+        if not isinstance(rand, grom.util.random.Random):
+            rand = grom.util.random.Random(rand)
+        self.rand = rand or grom.util.random.Random()
 
     def __str__(self):
         """ Return a string representation.
@@ -49,16 +48,14 @@ class Genome:
             partitions), some lines of the output may go beyond the
             `Genome.LINE_SIZE` character limit.
         """
-        m = (Genome.LINE_SIZE - len(self) * 2 + 1) / self.size
+        m = (grom.util.LINE_SIZE - len(self) * 2 + 1) / self.size
         pushed = 0
 
         infos = "Name: {}, size: {:,}b\n".format(self.name, self.size)
         names = "\n"
         parts = "|"
 
-        progress = 0
-
-        Genome.output("Printing..      [", end="")
+        pr = grom.util.Progress("Printing", len(self))
         for k in range(len(self)):
             n = int(len(self[k][1]) * m - 1 - pushed)
             if n < 0:
@@ -73,11 +70,8 @@ class Genome:
                 )
             parts+= str(k) + "-" * n + "|"
 
-            newProgress = int(k / len(self) * (Genome.LINE_SIZE - 19))
-            if progress < newProgress:
-                Genome.output("=" * (newProgress - progress), end="")
-                progress = newProgress
-        Genome.output("=" * (Genome.LINE_SIZE - 18 - progress) + "]")
+            pr.update(k)
+        del pr
 
         return infos + parts + names
     # END object general
@@ -106,6 +100,83 @@ class Genome:
         if isinstance(self[-1], str):
             r = range(self[-2][1][-1] + 1 if 1 < len(self) else 0, self.size)
             self.part[-1] = (self[-1], r)
+
+        return self
+
+    def check(self, part=None):
+        """ Check the integrity of the partition.
+
+            For the given partition system `part` or the partition it already
+            have if none is given, check for holes (unmapped part of the data)
+            and overlaps (parts covered by multiple partition) as two lists of
+            non-empty ranges (in this order).
+
+            This function is quite time consuming: you should avoid using it.
+            Does not check for out-of-bound partitions.
+
+            Note that this function does not assume the partition is "sorted"
+            (i.e. following ranges are not presumed to be actually next to one
+            another) -- although this increases the complexity and execution
+            time for very complex systems.
+        """
+        holes = []
+        overlaps = []
+
+        h_start, h_started = 0, False
+        o_start, o_started = 0, False
+
+        pr = grom.util.Progress("Checking", self.size)
+        for k in range(self.size):
+            count = len([1 for n, r in self.part if k in r])
+
+            if not count and not h_started:
+                h_start = k
+                h_started = True
+            elif h_start - k and count and h_started:
+                holes.append(range(h_start, k))
+                h_started = False
+
+            if 1 < count and not o_started:
+                o_start = k
+                o_started = True
+            elif o_start - k and count < 2 and o_started:
+                overlaps.append(range(o_start, k))
+                o_started = False
+
+            pr.update(k)
+        del pr
+
+        return holes, overlaps
+
+    def format(self, newPart): # I guess it could be in "data manipulation"...
+        """ Reformat the `Genome`.
+
+            Reformatting the `Genome` only swaps the partitions around
+            according to the `newPart` parameter: it must be a list of valid
+            partition identifiers (either `str` or `int`). The new data will
+            contain the old data from the matching partition.
+
+            Note: for this function to operate, `Genome.check` must return
+            two empty list. Does not raise exception otherwise, but returns
+            None.
+        """
+        if any(self.check()):
+            return None # USL
+
+        part = []
+        data = bytearray([0] * self.size)
+
+        av = 0
+        for p in newPart:
+            n, r = self[p]
+
+            part.append((n, range(av, av + len(r))))
+            data[part[-1][1][0]:part[-1][1][-1]] = self.data[r[0]:r[-1]]
+
+            av+= len(r)
+
+        self.part = part
+        self.data = data
 
         return self
 
@@ -176,26 +247,13 @@ class Genome:
     # END partitions manipulation
 
     # START data modification
-    @staticmethod
-    def randit(it, rand=None):
-        """ Random object from iterable.
-
-            Return an occurrence at random from the given iterable, using
-            `rand` if given or else a new `Random` object.
-        """
-        return it[(rand or Random()).randrange(0, len(it))]
-
-    @staticmethod
-    def output(info, end="\n"):
-        if Genome.DEBUG:
-            print(info, end=end)
-
     def mutate(self, ratio, sigma, bounds=[]):
         """ Mutate the `Genome` randomly.
 
             Affect `ratio` of the genome's data by adding a random integer from
             `-sigma` to `+sigma`. If `sigma` is not an `int`, the random is
-            done from `sigma[0]` to `sigma[-1]`.
+            done from `sigma[0]` to `sigma[-1]`. The value may overflow or
+            underflow but it will not affect any surrounding data.
 
             If `bounds` is left empty, every bytes of data may be affected. To
             restrict mutations to an area, you must precise an iterable of
@@ -214,20 +272,17 @@ class Genome:
                 if isinstance(bounds[k], (int, str)):
                     bounds[k] = self[bounds[k]][1]
 
-        progress = 0
+        randit = grom.util.randit
         total = int(ratio * self.size)
 
-        Genome.output("Mutation..      [", end="")
+        pr = grom.util.Progress("Mutation", total)
         for k in range(total):
-            p = Genome.randit(Genome.randit(bounds, self.rand), self.rand)
+            p = randit(randit(bounds, self.rand), self.rand)
             new = self.data[p] + self.rand.randint(sigma[0], sigma[-1])
             self.data[p] = new % 0x100
 
-            newProgress = int(k / total * (Genome.LINE_SIZE - 19))
-            if progress < newProgress:
-                Genome.output("=" * (newProgress - progress), end="")
-                progress = newProgress
-        Genome.output("=" * (Genome.LINE_SIZE - 18 - progress) + "]")
+            pr.update(k)
+        del pr
 
         return self
 
@@ -253,26 +308,21 @@ class Genome:
                 if isinstance(bounds[k], (int, str)):
                     bounds[k] = self[bounds[k]][1]
 
-        progress = 0
-
-        Genome.output("Gene swapping.. [", end="")
+        pr = grom.util.Progress("Gene swapping", amount)
         for k in range(amount):
-            r1 = Genome.randit(bounds, self.rand)
-            r2 = Genome.randit(bounds, self.rand)
+            r1 = grom.util.randit(bounds, self.rand)
+            r2 = grom.util.randit(bounds, self.rand)
 
             s = min((len(r1), len(r2), size))
 
-            p1 = Genome.randit(r1[:-s])
-            p2 = Genome.randit(r2[:-s])
+            p1 = grom.util.randit(r1[:-s])
+            p2 = grom.util.randit(r2[:-s])
 
             self.data[p1:p1+s], self.data[p2:p2+s] = self.data[p2:p2+s], \
                                                      self.data[p1:p1+s]
 
-            newProgress = int(k / amount * (Genome.LINE_SIZE - 19))
-            if progress < newProgress:
-                Genome.output("=" * (newProgress - progress), end="")
-                progress = newProgress
-        Genome.output("=" * (Genome.LINE_SIZE - 18 - progress) + "]")
+            pr.update(k)
+        del pr
 
         return self
 
@@ -321,29 +371,24 @@ class Genome:
 
         data = bytearray([0] * self.size)
 
-        progress = 0
-
-        Genome.output("Crossing over.. [", end="")
+        pr = grom.util.Progress("Crossing over", len(bounds))
         for k in range(len(bounds)):
-            start, end = bounds[k][0], bounds[k][-1]
+            st, ed = bounds[k][0], bounds[k][-1]
 
             if callable(crosser):
-                r = crosser(self.data[start:end], mate.data[start:end])
+                r = crosser(self.data[st:ed], mate.data[st:ed])
 
                 if isinstance(r, str):
                     r = bytearray(r, 'ascii')
                 if isinstance(r, (bytes, list, tuple)):
                     r = bytearray(r)
             else:
-                r = Genome.randit((self.data, mate.data), self.rand)[start:end]
+                r = grom.util.randit((self.data, mate.data), self.rand)[st:ed]
 
-            data[start:end] = r
+            data[st:ed] = r
 
-            newProgress = int(k / len(bounds) * (Genome.LINE_SIZE - 19))
-            if progress < newProgress:
-                Genome.output("=" * (newProgress - progress), end="")
-                progress = newProgress
-        Genome.output("=" * (Genome.LINE_SIZE - 18 - progress) + "]")
+            pr.update(k)
+        del pr
 
         return Genome(data, name or self.name + "x" + mate.name, rand, True)
     # END data modification
@@ -415,11 +460,10 @@ class Genome:
         """ 'Launch' the `Genome`.
 
             Start the `Genome`'s file with OS' associated program (using
-            python's `os.startfile`). You may want to `save` the `Genome`
-            beforehand.
+            Python's `os.startfile`). You may want to `save` the `Genome`
+            beforehand. Uses `grom.util.os`.
         """
-        import os
-        os.startfile(self.name)
+        grom.util.os.startfile(self.name)
 
         return self
 

@@ -45,7 +45,7 @@ child = g.crossover(g2, "child/file_name.ext")
 You may then save the `Genome` to use with its associated program:
 ```python
 child.save() # save the child into "child/file_name.ext"
-child.start() # start the file using python's `os.startfile`
+child.start() # start the file using Python's `os.startfile`
 
 # or simply:
 child()
@@ -76,7 +76,7 @@ sound.
 ```python
 g = Genome("some/image.bmp", "output.bmp")
 
-# apply de discussed partition system
+# apply the discussed partition system
 g.partition([
     ('head', range(0, 0x36)),
     ('raw') # if no range is provided for the last one, it will cover up to EOF
