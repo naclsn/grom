@@ -1,17 +1,23 @@
 import grom
 
-class Generation:
+class Generation: # TODO: test
     """ A `Generation` is `Genome` dictionary, that you can load and save from
         an archive, and is designed to ease `Genome` mass manipulation.
     """
     # START object general
-    def __init__(self, genomes={}):
+    def __init__(self, partition=[], genomeSize=0):
+        # TODO: list members
         """ Not done yet!
 
             TODO: do.
         """
-        self.genomes = genomes
-        self.categories = []
+        self.genomes = dict()
+        self.categories = list()
+
+        if isinstance(partition, grom.Partition):
+            self.partition = partition
+        else:
+            self.partition = grom.Partition(genomeSize, partition)
 
     def __str__(self):
         """ Returns a _really basic_ representation.
@@ -19,7 +25,10 @@ class Generation:
             Concatenates the representations of every `Genome`s of this
             `Generation`.
         """
-        return "\n---\n".join([str(g) for g in self])
+        info = str(len(self)) + " genomes:\n\n"
+        geno = "\n---\n".join(["{}: {}".format(n, g) for n, g in self])
+        part = "\n\n" + str(self.partition)
+        return info + geno + part
     # END object general
 
     # START genome management
@@ -27,7 +36,7 @@ class Generation:
         """ Gets the first `Genome` of name `k`.
 
             If multiple `Genome`s have exactly the same name, only the first
-            one is returned, overshadowing any others.
+            one is returned, overshadowing any others. # TODO: return them all
 
             If `k` is a `list`, returns a list equivalent to calling the
             function for each name in `k`.
@@ -48,15 +57,30 @@ class Generation:
 
         return self.genomes[k]
 
+    def __setitem__(self, k, v): # TODO: doc
+        self.genomes[k] = v
+
+    def append(self, v, multiples=False): # TODO: doc
+        if multiples:
+            if isinstance(multiples, int):
+                multiples = range(multiples)
+            for name in multiples: # TODO: `Genome.copy`
+                g = v.copy(str(name)).setPartition(self.partition)
+                self.genomes[str(name)] = g
+        else:
+            self.genomes[v.name] = v.setPartition(self.partition)
+
+        return self
+
     def __len__(self):
         """ Returns the number of `Genome` for the `Generation`.
         """
         return len(self.genomes)
 
     def __iter__(self):
-        """ Iterates over the `Genome`s of this `Generation`
+        """ Iterates over the `Genome`s of this `Generation`. # TODO: comment
         """
-        return self.genomes
+        return iter(self.genomes.items())
 
     def categorise(self, delimiter):
         """ Delimits the `Generation` into categories.
@@ -71,21 +95,21 @@ class Generation:
         cat = {}
 
         pr = grom.util.Progress("Categorizing", len(self.genomes))
-        for e in self:
-            k = delimiter(e)
+        for n, g in self:
+            k = delimiter(g)
 
             if not k in cat.keys():
                 cat[k] = len(self.categories)
-                self.categories.append([e])
+                self.categories.append([g])
             else:
-                self.categories[cat[k]].append(e)
+                self.categories[cat[k]].append(g)
 
             pr.update()
         del pr
 
         return self
 
-    def select(self, only):
+    def select(self, only): # TODO: comment
         """ Selects `only` some `Genome`s.
 
             Returns a list of all `Genome` returning `True` (or any Python
@@ -94,9 +118,9 @@ class Generation:
             only(currentGenome:Genome):bool
             ```
         """
-        return [g for g in self if only(g)]
+        return [(n, g) for n, g in self if only(g)]
 
-    def foreach(self, do, only=None):
+    def foreach(self, do, only=None): # TODO: comment
         """ Classic for-each loop.
 
             Iterates over each `Genome` and apply the `do` function:
@@ -110,7 +134,7 @@ class Generation:
             Returns a dictionary mapping the `Genome`'s name to `do`'s output.
         """
         w = self.select(only) if only else self
-        return dict([(g.name, do(g)) for g in w])
+        return [(n, do(g)) for n, g in w]
 
     def aggregate(self, do, start=None, only=None):
         """ Classic aggregation function.
@@ -126,7 +150,7 @@ class Generation:
 
             Returns the last value of the accumulator.
         """
-        for g in self.select(only) if only else self:
+        for n, g in self.select(only) if only else self:
             start = do(start, g)
         return start
     # END genome management

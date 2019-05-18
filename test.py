@@ -1,15 +1,70 @@
-from grom import Genome, util
+from grom import *
 
-g = Genome("examples/src/img1.bmp", "output.bmp")
+dirName = "examples\\src\\pkmn\\"
+fileSize = 0x2000000 # 33,554,432 bytes (32 Mb)
 
-g.partition([
-    ('head', range(0, 0x36)),
-    ('a', range(0x36, 0x1A132)),
-    ('b', range(0x1A132, 0x1AFF0)),
-    ('c', range(0x1AFF1, 0xA1F1F)),
-    ('d')
-])
-print(g)
-print(g.check())
+names = [
+        'Move Names',
+        'Item Names'
+    ]
+pictures = [
+        'Pokemon Picture Data (Set 1)',
+        'Pokemon Picture Data (Set 2)',
+        'Pokemon Picture Data (Set 3)',
+        'Pokemon Picture Data (Set 4)',
+        'Pokemon Picture Data (Set 5)'
+    ]
+data = [
+        'Moves Data',
+        'Pokemon Evolutions & Learned Moves'
+        #'General Pokemon Data',
+        #'Bank in which Pokemon Base Stats are stored'
+    ]
+pointers = [
+        'Pokedex Pointers',
+        'Kinds of Pokemon Text, Height, Weight, Pokedex Pointers',
+        'Evolution/Attacks Learned Pointers'
+    ]
+locations = {
+        'Header': [],
+        'Objects': [],
+        'Data': [],
+        'Script': [],
+        'Pointers': []
+    }
 
-g.mutate(.5, 0x7F, ['a', 'b', 'c'])()
+def lineParse(lineCurr, lineNext):
+    address, name = lineCurr.split(' ', 1)
+    name.strip()
+
+    if '-' in address:
+        st, ed = address.split('-')
+
+        if not ed:
+            ed = int(lineNext.split(' ')[0].split('-')[0].strip('$'), 16) - 1
+        else:
+            ed = int(ed, 16)
+        st = int(st, 16)
+
+    elif address[0] == '$':
+        st = int(address.strip('$-'), 16)
+        ed = int(lineNext.split(' ')[0].split('-')[0].strip('$'), 16) - 1
+
+        locations[name.strip('"').split(' ')[-1]].append(name)
+
+    return (name, range(st, ed + 1))
+
+P = Partition(fileSize, dirName + "rom_map.rps", lineParse)
+G = Generation(P)
+
+g = Genome(dirName + "pkmn_red.gb")
+G.append(g)
+
+# g.geneswap(128, 8, names)
+# g.geneswap(512, 128, pictures)
+# g.mutate(1, 0x80, data)
+# g.mutate(1, 0x80, data)
+# g.mutate(.02, 1, pointers)
+g.geneswap(222, 1, locations['Data'].copy())
+
+g("C:\\Users\\sincs\\OneDrive\\Bureau\\dump\\test.gb", pause=False)

@@ -1,0 +1,150 @@
+; source: https://datacrystal.romhacking.net/wiki/Pokemon_Mystery_Dungeon:_Red_Rescue_Team:ROM_map
+; Pokemon Mystery Dungeon: Red Rescue Team:ROM map
+; The following article is a ROM map for Pokemon Mystery Dungeon: Red Rescue Team.
+; Note that categories and subpages names are subject to frequent changes due to new data discovered.
+
+; Contents
+; 1. Currently Uncategorised Chunk
+; 2. Script
+; 3. Unidentified Palette
+; 4. Currently Uncategorised Chunk
+; 5. Dungeons Floors Data
+; 6. Currently Uncategorised Chunk
+; 7. Pokemon Graphics
+; 8. Currently Uncategorised Chunk
+
+; Currently Uncategorised Chunk
+0000000 to 00000BF (00000C0) = ROM Header
+009EACC to 009EEF3 (0000428) = Script Command Parsing Code
+009EEF4 to 00A143C (0002548) = Script Command Code
+00B6904 to 00B690B (0000008) = first pksdir0 string
+00B69BC to 00B69DF (0000023) = Build Date String: "PKDi ver 1.0 [Apr 28 2006] 16:37:54"
+00D3568 to 00D356F (0000008) = pksdir0 string
+00D3570 to 00D3D6F (0000800) = Friend Area Locale Data
+00D3D70 to 00D3F0B (000019C) = Friend Area Names
+00D3F14 to 00D4013 (0000100) = Location Coordinates On Map
+00E7D30 to 00E7DFB (00000CB) = Main Debug Menu Textbox
+00F0054 to 00F2623 (00025D0) = Personality Test Questions
+00F2624 to 00F2703 (00000E0) = Personality Test Questions Pointer Table
+00F278E to 00F27C1 (0000034) = List Of Starter Species
+00F4264 to 00F4277 (0000014) = List Of Partner Species
+0109D30 to 010A34F (0000620) = Dungeon Data
+010A3F0 to 010A57F (0000190) = Standard POKe found values
+010AD4C to 010AE23 (00000D7) = Type Names
+010AE24 to 010AF4F (000012B) = Formatted Type Names
+010B4C8 to 010B5FB (0000133) = Abilities Pointer Table
+010B5FC to 010B987 (000038B) = Abilities Names
+010B988 to 010BABB (0000133) = Ability Description Pointer Table
+010BABC to 010CC0B (000114F) = Ability Descriptions
+010CC0C to 010CCCF (00000C4) = Range Name Pointer Table
+010CCD0 to 010CEEF (000021F) = Range Names
+010CF1C to 010D07F (0000164) = Status Names Pointer Table
+010D080 to 010D627 (00005A8) = Status Names
+010D628 to 010D78B (0000164) = Formatted Status Names Pointer Table
+010D78C to 010DD4F (00005C6) = Formatted Status Names
+010E074 to 010E383 (0000310) = Status Descriptions Pointer Table
+010E384 to 0111A27 (00036A8) = Status Descriptions
+0111A28 to 0111D37 (0000310) = Dungeon Names Pointer Table
+0111D38 to 0112233 (00004FB) = Dungeon Names
+0112234 to 0112293 (0000060) = IQ Skill Name Pointer Table
+0112294 to 011240B (0000178) = IQ Skill Names
+011240C to 011246B (0000060) = IQ Skill Description Pointer Table
+011246C to 0112C13 (00007A8) = IQ Skill Descriptions
+0112C14 to 0112C43 (0000030) = Tactics Pointer Table
+0112C44 to 0112CFB (00000B8) = Tactics Names
+0112CFC to 0112D2B (0000030) = Tactics Description Pointer Table
+0112D2C to 011307F (0000354) = Tactics Descriptions
+0117000 to 011709B (000009B) = Save Place Names Pointer Table
+011709C to 01172AF (0000213) = Save Place Names
+
+; Script
+011E250 to 011E257 (0000008) = pksdir0 string
+011E258 to 011E5EB (0000394) = Map Script: Pointer Table
+011E5EC to 011E5F3 (0000008) = pksdir0 string
+011E5F4 to 011E633 (0000040) = Unknown Data
+011E634 to 011E63B (0000008) = pksdir0 string
+011E63C to 011ED17 (00006DC) = Unknown Data
+011ED18 to 011ED1F (0000008) = pksdir0 string
+011ED20 to 011EE2F (0000120) = Unknown Data
+011EE30 to 011EE37 (0000008) = pksdir0 string
+011EE38 to 011EE5B (00000B4) = Unknown Data
+011EEEC to 012F163 (0000008) = pksdir0 string
+011EE64 to 012F1F7 (0010394) = Function Script: Data
+012F1F8 to 013050B (0001314) = Function Script: Pointer Table
+013050C to 0132373 (0001E68) = Function Script: Debug Names
+0132374 to 013237B (0000008) = pksdir0 string
+013237C to 01323C3 (0000048) = Friend Area Dialogue: Pointer Table
+01323C4 to 01326F3 (0000330) = Friend Area Dialogue: Text
+01326F4 to 01326FB (0000008) = pksdir0 string
+01326FC to 026F98B (013D290) = Map Script: Data
+0272B3C to 02FFFFF (008D4C4) = Blank Space (0xFF)
+
+; Unidentified Palette
+0300000 to 0300007 (0000008) = pksdir0 string
+0300008 to 030000B (0000004) = little-endian long int value indicating the amount of pointers
+030000C to 030000F (0000004) = pointer to pointer table at 0300018
+0300010 to 0300017 (0000008) = pksdir0 string
+0300018 to 030001B (0000004) = pointer to "monpal" string at 0300020
+030001C to 030001F (0000004) = pointer to unidentified palette at 0300030
+0300020 to 0300027 (0000008) = "monpal" string
+0300028 to 030002F (0000008) = pksdir0 string
+0300030 to 03003EF (00003F0) = Unidentified palette
+03003F0 to 030040F (0000020) = 4 pksdir0 strings
+0300410 to 03004FF (00000F0) = Blank Space (0xFF)
+
+; Currently Uncategorised Chunk
+0300500 to 0300507 (0000008) = pksdir0 string
+0300508 to 030050B (0000004) = little-endian long int value indicating the amount of Pokemon graphics pointers
+030050C to 030050F (0000004) = pointer to Data Root pointer table at 0300518
+0300510 to 0300517 (0000008) = pksdir0 string
+0300518 to 030128F (0000D78) = Data Root: Pointer Table
+0301290 to 0302017 (0000D88) = Data Root: Debug Names
+031DD9C to 0357B87 (0039DEC) = Unidentified Compressed Pokemon Data
+0357B88 to 0357B97 (0000010) = SIRO Data Header pointing to main Pokemon data at 0357B98
+0357B98 to 035F2D7 (0007740) = Main Pokemon Data
+035F2D8 to 0360BF3 (000191B) = Pokemon Species and Category Names
+03A2E74 to 03AFFFF (000D1B8) = Blank Space (0xFF)
+
+; Dungeons Floors Data
+04A2BF4 to 04A2C03 (0000010) = SIRO Data Header pointing to master pointer table at 04CB834
+04A2C04 to 04A9E73 (0000768) = Dungeons Floors Data: Floors Data ID Table
+04A9E74 to 04A9F73 (0000100) = Dungeons Floors Data: Dungeons Pointer Table
+04A9F74 to 04B6063 (000C0F0) = Dungeons Floors Data: Main Data
+04B6064 to 04C2A9B (000CA38) = Dungeons Floors Data: Pokemon Found
+04C2A9C to 04C37B7 (0000D1C) = Dungeons Floors Data: Pokemon Found Pointer Table
+04C37B8 to 04C4ED7 (0001720) = Dungeons Floors Data: Traps Found
+04C4ED8 to 04C5127 (0000250) = Dungeons Floors Data: Traps Found Pointer Table
+04C5128 to 04CB56B (0006444) = Dungeons Floors Data: Items Found
+04CB56C to 04CB833 (00002C8) = Dungeons Floors Data: Items Found Pointer Table
+04CB834 to 04CB847 (0000014) = Dungeons Floors Data: Master Pointer Table
+
+; Currently Uncategorised Chunk
+04F247C to 04F247F (0000004) = little-endian long int value indicating the amount of tiles for special tiles graphics
+04F2480 to 04F451F (00020A0) = Dungeon Special Tiles: Graphics
+04F4520 to 04F459F (0000080) = Dungeon Special Tiles: Palettes
+0501200 to 050FFFF (000EE00) = Blank Space (0xFF)
+
+; Pokemon Graphics
+0510000 to 0510007 (0000008) = pksdir0 string
+0510008 to 051000A (0000004) = little-endian long int value indicating the amount of Pokemon graphics pointers
+051000B to 051000F (0000004) = pointer to Pokemon graphics pointer table at 0510018
+0510010 to 0510017 (0000008) = pksdir0 string
+0510018 to 0510F9F (0000F88) = Pokemon Graphics: Pointer Table
+0510FA0 to 0511F27 (0000F88) = Pokemon Graphics: Debug Names
+0511F28 to 0511F2F (0000008) = pksdir0 string
+0511F30 to 167FE77 (116DF38) = Pokemon Graphics: Overworld Animations
+167FE78 to 16BD42B (003D5B4) = Pokemon Graphics: Dialogue Sprites
+16BD42C to 16BD7AB (0000380) = Pokemon Graphics: Palettes
+
+; Currently Uncategorised Chunk
+16BD7AC to 173FFFF (0082854) = ???
+1740000 to 185899F (011899F) = More sprites (possibly tile data?)
+1C92750 to 1C96E50 (0004700) = Title Screen Background
+1CA9454 to 1CAF2C4 (0005E70) = Before Game Loading Screens
+1CF6BAC to 1CF706C (00004C0) = Cloud Sprites
+1D02950 to 1E5FFFF (015D6B0) = ???
+1E605B0 to 1E760D0 (0015B20) = Team Flag Sprites
+1E772BC to 1E77AE0 (0000824) = Mime Jr., Weavile, Lucario, and Bonsly Statue Sprites
+1E7C240 to 1E7EA60 (0002820) = Pelliper and Letter Sprites from Intro
+1E80000 to 1E81DB3 (0001DB3) = Sound Data Bank Pointers
+1E81DB4 to 1E84160 (00023AC) = Sound Data Bank Debug Names
