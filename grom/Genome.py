@@ -270,6 +270,52 @@ class Genome:
 
         return self
 
+    def apply(self, do, part, groupBy=1):
+        """ Apply a function to the data.
+
+            Run through the partitions and replace the value in the data with
+            the value returned from calling the function `do`, provided with
+            the current data.
+
+            If `part` is left empty, every bytes of data may be affected. To
+            restrict mutations to an area, you must precise an iterable of
+            ranges (iterables) from which the destination will be chosen. If
+            `bound` contains raw integers or raw string, they are interpreted
+            as partition identifiers and thus replace by their partition's
+            range.
+
+            If `groupBy` is not 1 (default value) the function `do` will
+            receive a `bytearray` of size `groupBy` and must return a
+            `bytearray` of the same size to replace into the data. Note: if
+            there is less than `groupBy` bytes of data left to process, the
+            object passed to `do` will still by a `bytearray` the size of
+            `groupBy` with unused bytes filled with `0x00` and only the needed
+            bytes from the returned `bytearray` will by used.
+        """
+        if not part:
+            part = [r for n, r in self.partition]
+        else:
+            for k in range(len(part)):
+                if isinstance(part[k], (int, str)):
+                    part[k] = self.partition[part[k]]
+
+        pr = grom.util.Progress("Applying", len(part))
+        for r in part:
+            for k in range(r[0], r[-1] + 1, groupBy):
+                if groupBy == 1:
+                    self.data[k] = do(self.data[k])
+                else:
+                    st, ed = k, k + groupBy
+                    if ed < self.size + 1:
+                        self.data[st:ed + 1] = do(self.data[st:ed + 1])
+                    else:
+                        off = ed - self.size
+                        data = self.data[st:self.size] + bytearray([0] * off)
+                        self.data[st:self.size] = do(data)[:groupBy - off]
+        del pr
+
+        return self
+
     def crossover(self, mate, name=None, rand=None, part=[], crosser=None):
         """ Create a crossover `Genome` from parents.
 

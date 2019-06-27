@@ -33,9 +33,9 @@ class Partition:
             self.pmap = dict()
 
             for k in range(len(self)):
-                if isinstance(self.partition[k], int):
-                    st = self.partition[k-1][-1] if k else 0
-                    ed = self.partition[k]
+                if isinstance(self.partition[k][1], int):
+                    st = self.partition[k-1][1][-1] if k else 0
+                    ed = self.partition[k][1] + 1
                     self.partition[k] = (self.partition[k][0], range(st, ed))
 
                 if isinstance(self.partition[k], str):
@@ -44,9 +44,10 @@ class Partition:
                     self.pmap[self.partition[k][0]] = k
 
             if isinstance(self.partition[-1], str):
-                st = self.partition[-2][-1] + 1 if 1 < len(self) else 0
-                r = range(st, self.size + 1)
+                st = self.partition[-2][1][-1] if 1 < len(self) else 0
+                r = range(st, self.size)
                 self.partition[-1] = (self.partition[-1], r)
+
         else:
             self.load(partition, parser) # TODO: hum..?
 

@@ -69,6 +69,8 @@ Let's take classic `.bmp` file:
 1. The first 0x36 bytes are reserved for signature and header information
 0. Bytes from 0x36 to EOF contains the raw pixel data we want to modify
 
+> Note: header size may vary..?
+
 You may then want to define a matching partition: this will enable you to
 control which data will be affected by `mutate`, and keep the file signature
 sound.
