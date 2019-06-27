@@ -20,8 +20,8 @@ saving and modification:
 ```python
 from grom import Genome
 
-# load the content of "test/file_name.ext" into a `bytearray`
-g = Genome("test/file_name.ext", "genome/output_name.ext")
+# load the content of "test/filename.ext" into a `bytearray`
+g = Genome("test/filename.ext", "genome/output.ext")
 ```
 
 To a loaded `Genome`, you can apply the following
@@ -36,23 +36,23 @@ g.geneswap(10, 8) # swap 10 random chunks of 8 bytes in the data
 The crossover function works a bit differently as it does not modify the
 `Genome` itself, but rather create a new one:
 ```python
-g2 = Genom("another/file_name.ext")
+g2 = Genom("another/filename.ext")
 
 # crossover `g` and `g2` into a new `Genome`
-child = g.crossover(g2, "child/file_name.ext")
+child = g.crossover(g2, "child/filename.ext")
 ```
 
 You may then save the `Genome` to use with its associated program:
 ```python
-child.save() # save the child into "child/file_name.ext"
+child.save() # save the child into "child/filename.ext"
 child.start() # start the file using Python's `os.startfile`
 
 # or simply:
 child()
 ```
 
-> Note that almost every function (all function that does not return something)
-> return `self` to allow for chaining:
+> Note that almost every function (all function that does not return something
+> in particular) returns `self` to allow for chaining:
 > ```python
 > Genome(filename).partition(parts).mutate(tx, amp).save().start()
 > ```
