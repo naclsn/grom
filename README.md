@@ -1,3 +1,5 @@
+Original idea wan't mine but a firend's when they told me about an interesting storyline that emerged for it (great presentation of it [here](https://youtu.be/Ove6z8zDsjE)). See also [their approach](https://github.com/Pyrofoux/ROM-MUTAGEN) on it and [more of their cool stuff](https://pyrofoux.itch.io/).
+
 # **grom**
 
 ## Overview
